@@ -8,24 +8,30 @@ import (
 
 func HandleCompany(c *chan int, wg *sync.WaitGroup, r row) {
 	wg.Add(1)
+	defer func() {
+		<-*c
+	}()
 	defer wg.Done()
 	time.Sleep(time.Second)
 	fmt.Println("-----HANDLE COMPANY " + r.data)
 	channelJob := make(chan int, 2)
+	var jobWG sync.WaitGroup
 	for _, row := range r.job {
 		channelJob <- 1
-		go HandleJob(&channelJob, wg, row)
+		go HandleJob(&channelJob, &jobWG, row)
 	}
 	time.Sleep(time.Second)
-	<-*c
+	jobWG.Wait()
 }
 func HandleJob(c *chan int, wg *sync.WaitGroup, job string) {
 	wg.Add(1)
+	defer func() {
+		<-*c
+	}()
 	defer wg.Done()
 	time.Sleep(time.Second)
 	fmt.Println("HANDLE JOB ", job)
 	time.Sleep(time.Second)
-	<-*c
 }
 func main() {
 	channelCompany := make(chan int, 3)
